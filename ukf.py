@@ -1,6 +1,7 @@
 import numpy as np
 import csv
 from scipy import linalg
+import math
 ''' Based on https://www.mathworks.com/matlabcentral/fileexchange/18217-learning-the-unscented-kalman-filter '''
 
 
@@ -137,16 +138,17 @@ if __name__ == '__main__':
     sV = []
     zV = []
     xV = []
-    dtV = []
+    tV = [] #time vector
     xk1k = []
+    thetaV = [] # theta vector
     prevTime = 0.0
     # x = s + 0.1 * np.random.randn(2, 1)
     z = np.array([[.0], [.0]])
     x = np.array([[.0], [.0], [.0], [.0], [.0], [.0]])
-    dtV.append(dt)
+    tV.append(dt)
     zV.append(z)
     xV.append(x)
-
+    thetaV.append(theta)
     with open('measurements.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         line_count = 0
@@ -155,23 +157,33 @@ if __name__ == '__main__':
                 print(f'Column names are {", ".join(row)}')
                 line_count += 1
             else:
-                a = float(row[2])  #assertign readings to z
+                a = float(row[1])  #assertign readings to z
                 b = float(row[3])
                 currTime = float(row[0])
                 dt = float(currTime-prevTime)
                 z = np.array([[a], [b]])
                 zV.append(z)
-                theta += b
+                theta += b*dt
                 # print(a)
                 x = estimator.estimate(x, z)
                 xV.append(x)
-                print(dt)# print(f'\t{row[0]} works in the {row[1]} department, and was born in {row[2]}.')
+
+                # print(dt)# print(f'\t{row[0]} works in the {row[1]} department, and was born in {row[2]}.')
                 line_count += 1
                 prevTime = currTime
-        print(f'Processed {line_count} lines.')
 
-    # with open('results.csv', mode='w') as results:
-    #     employee_writer = csv.writer(results, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                tV.append(currTime)
+                thetaV.append(theta)
+        print(f'Processed {line_count} lines.')
+        tR = np.array(tV)
+        ar = np.array(xV)
+        thetaR = np.array(thetaV)
+    with open('results.csv', 'w', newline='') as results:
+        results_writer = csv.writer(results, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        results_writer.writerow(['dt', 'X', 'Y', 'V', 'Theta', 'Sin', 'Cos'])
+        for x in range(len(tV)):
+            results_writer.writerow([tR[x], ar[x, 0, 0], ar[x, 1, 0], math.sqrt(ar[x, 2, 0]**2+ar[x, 3, 0]**2),
+                                     thetaR[x], math.sin(thetaR[x]), math.cos(thetaR[x])])
 
 
 
@@ -210,7 +222,7 @@ if __name__ == '__main__':
     #     s = f(s)
     #     s = s + 0.1 * np.random.randn(2,1)
     import matplotlib.pyplot as plt
-    ar = np.array(xV)
+
 
     plt.figure(0)
     plt.subplot(611)
