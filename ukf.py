@@ -127,20 +127,23 @@ class UKF:
 
 if __name__ == '__main__':
     # print UKF._sigmas(0.0017, np.eye(3), np.array([[0.2037], [-0.034], [0.9284]]))
-    f = lambda x: np.array([[x[0, 0]+x[2,0]*dt +0.5*(dt**2)*(np.cos(teta)*x[4, 0])], [x[1, 0]+x[3, 0]*dt+0.5*(dt**2)*(np.sin(teta)*x[4, 0])], [x[2, 0]+(dt*np.cos(teta)*x[4, 0])], [x[3, 0]+(dt*np.sin(teta)*x[4, 0])], [x[4, 0]], [x[5, 0]]])
+    f = lambda x: np.array([[x[0, 0]+x[2,0]*dt +0.5*(dt**2)*(np.cos(theta)*x[4, 0])], [x[1, 0]+x[3, 0]*dt+0.5*(dt**2)*(np.sin(theta)*x[4, 0])], [x[2, 0]+(dt*np.cos(theta)*x[4, 0])], [x[3, 0]+(dt*np.sin(theta)*x[4, 0])], [x[4, 0]], [x[5, 0]]])
     h = lambda x: np.array([[x[4, 0]], [x[5, 0]]])  # np.array([[np.cos(x[0])], [x[1]]])
 
     estimator = UKF(6, f, h, Q=np.eye(6) * 0.1, R=np.eye(1) * 0.1) # X Y Vx Vy ax gyz
     # s = np.array([[.0], [.0]]) + 0.1 * np.random.randn(2, 1)
-    teta = 0.0
+    theta = 0.0
+    dt = 0.0
     sV = []
     zV = []
     xV = []
+    dtV = []
     xk1k = []
     prevTime = 0.0
     # x = s + 0.1 * np.random.randn(2, 1)
     z = np.array([[.0], [.0]])
     x = np.array([[.0], [.0], [.0], [.0], [.0], [.0]])
+    dtV.append(dt)
     zV.append(z)
     xV.append(x)
 
@@ -158,7 +161,7 @@ if __name__ == '__main__':
                 dt = float(currTime-prevTime)
                 z = np.array([[a], [b]])
                 zV.append(z)
-                teta += b
+                theta += b
                 # print(a)
                 x = estimator.estimate(x, z)
                 xV.append(x)
@@ -166,6 +169,11 @@ if __name__ == '__main__':
                 line_count += 1
                 prevTime = currTime
         print(f'Processed {line_count} lines.')
+
+    # with open('results.csv', mode='w') as results:
+    #     employee_writer = csv.writer(results, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+
 
     # x = np.array([[.0], [.0], [.0], [.0], [1], [1]])
     # xV.append(x)
